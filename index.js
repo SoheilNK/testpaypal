@@ -29,7 +29,7 @@ const createOrder = async () => {
     purchase_units: [
       {
         amount: {
-          currency_code: "CAD",
+          currency_code: "USD",
           value: "0.02",
         },
       },
