@@ -93,6 +93,7 @@
               JSON.stringify(details, null, 2)
             );
             const transaction = details.purchase_units[0].payments.captures[0];
+            
             alert(
               "Transaction " +
                 transaction.status +
@@ -100,6 +101,8 @@
                 transaction.id +
                 "\n\nSee console for all available details"
             );
+            //close current tab
+            window.close();
           },
         })
         .render("#paypal-button-container");

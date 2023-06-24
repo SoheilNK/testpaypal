@@ -4,7 +4,7 @@ import path from "path";
 import send from "send";
 const __dirname = path.resolve();
 
-let orderMap = new Map(); // create a new map object to store givID and orderID 
+let orderMap = new Map(); // create a new map object to store givID and orderID
 let amountMap = new Map(); // create a new map object to store givID and amount
 
 const app = express();
@@ -27,7 +27,6 @@ const getAccessToken = async () => {
 };
 
 const createOrder = async (givID, amount) => {
-  
   const url = "https://api-m.sandbox.paypal.com/v2/checkout/orders";
   const payload = {
     intent: "CAPTURE",
@@ -82,7 +81,6 @@ const send2giv = async (givID, result) => {
   return;
 };
 
-
 const capturePayment = async (orderID) => {
   const url = `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`;
   const headers = {
@@ -104,6 +102,7 @@ const capturePayment = async (orderID) => {
   send2giv(orderMap.get(orderID), data);
   //delete orderID from orderMap
   orderMap.delete(orderID);
+  
   return data;
 };
 
