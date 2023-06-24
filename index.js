@@ -1,7 +1,11 @@
 import express from "express";
 import fetch from "node-fetch";
 import path from "path";
+import send from "send";
 const __dirname = path.resolve();
+
+let orderMap = new Map(); // create a new map object to store givID and orderID 
+let amountMap = new Map(); // create a new map object to store givID and amount
 
 const app = express();
 const getAccessToken = async () => {
@@ -22,7 +26,8 @@ const getAccessToken = async () => {
   return data.access_token;
 };
 
-const createOrder = async () => {
+const createOrder = async (givID, amount) => {
+  
   const url = "https://api-m.sandbox.paypal.com/v2/checkout/orders";
   const payload = {
     intent: "CAPTURE",
@@ -30,7 +35,7 @@ const createOrder = async () => {
       {
         amount: {
           currency_code: "CAD",
-          value: "0.50",
+          value: amount,
         },
       },
     ],
@@ -48,8 +53,35 @@ const createOrder = async () => {
   if (data.error) {
     throw new Error(error);
   }
+  const orderID = data.id;
+  console.log("orderID: ", orderID);
+  console.log("givID: ", givID);
+  orderMap.set(orderID, givID);
+  console.log("orderMap: ", orderMap);
   return data;
 };
+
+const send2giv = async (givID, result) => {
+  console.log("givID send2giv: ", givID);
+  console.log("result send2giv: ", result);
+
+  // /api/Order/payment/{orderNumber}
+  const url = `https://mvpapi.giv2pay.com/api/Order/payment/${givID}`;
+  // const headers = {
+  //   "Content-Type": "application/json",
+  // };
+  // const response = await fetch(url, {
+  //   headers,
+  //   method: "POST",
+  //   body: JSON.stringify(result),
+  // });
+  // const data = await response.json();
+  // if (data.error) {
+  //   throw new Error(error);
+  // }
+  return;
+};
+
 
 const capturePayment = async (orderID) => {
   const url = `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`;
@@ -65,6 +97,13 @@ const capturePayment = async (orderID) => {
   if (data.error) {
     throw new Error(error);
   }
+  //send givID and result to giv
+  console.log("orderID from capture: ", orderID);
+  console.log("givID from capture: ", orderMap.get(orderID));
+  console.log("result from capture: ", data);
+  send2giv(orderMap.get(orderID), data);
+  //delete orderID from orderMap
+  orderMap.delete(orderID);
   return data;
 };
 
@@ -73,7 +112,13 @@ app.get("/", (req, res) => {
 });
 
 app.post("/orders", async (req, res) => {
-  const response = await createOrder();
+  //read givID and amount from query string
+  const givID = req.query.giv_id;
+  const amount = req.query.amount;
+  console.log("givID read by /orders: ", givID);
+  console.log("amount read by /orders: ", amount);
+
+  const response = await createOrder(givID, amount);
   res.json(response);
 });
 

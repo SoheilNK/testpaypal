@@ -3,9 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PayPal SDK Python Demo</title>
+    <title>PayPal SDK SandBox</title>
+    <script>
+      // Function to extract query string parameters from URL
+      function getQueryParams(url) {
+        var queryParams = {};
+        var params = url.slice(url.indexOf("?") + 1).split("&");
+
+        for (var i = 0; i < params.length; i++) {
+          var param = params[i].split("=");
+          var key = decodeURIComponent(param[0]);
+          var value = decodeURIComponent(param[1] || "");
+          queryParams[key] = value;
+        }
+
+        return queryParams;
+      }
+
+      // Function to read query string when the page loads
+      function readQueryString() {
+        var url = window.location.search;
+        var queryParams = getQueryParams(url);
+
+        // Accessing individual query parameters
+        var giv_id = queryParams["giv_id"];
+        var amount = queryParams["amount"];
+
+        // Do something with the query parameters
+        console.log("giv_id:", giv_id);
+        console.log("amount:", amount);
+        //save to local storage
+        localStorage.setItem("giv_id", giv_id);
+        localStorage.setItem("amount", amount);
+        //remove from url
+        window.history.replaceState({}, document.title, "/");
+
+      }
+    </script>
   </head>
-  <body>
+  <body onload="readQueryString()">
     <script data-sdk-integration-source="integrationbuilder_sc"></script>
     <div id="paypal-button-container"></div>
     <script src="https://www.paypal.com/sdk/js?client-id=AVkuImsa0vaRKpsqeYRuq7MvW9oaaTM-sZwiZ8dTz4llFyUVEXoLh9mSghcpbDRT8dUSEXAiOEPOyRic&currency=CAD"></script>
@@ -13,7 +49,10 @@
       paypal
         .Buttons({
           createOrder: async (data, actions) => {
-            const response = await fetch("/orders", {
+            // This function sets up the details of the transaction, including the amount and giv_id.
+            const giv_id = localStorage.getItem("giv_id");
+            const amount = localStorage.getItem("amount");
+            const response = await fetch(`/orders?giv_id=${giv_id}&amount=${amount}`, {
               method: "POST",
             });
             const details = await response.json();

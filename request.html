@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mock request</title>
+</head>
+<body>
+        <!-- mocking giveRequest ------------start------------->
+    <script>
+      async function givRequest() {
+        //from new tab
+        giv_id = "giv_id" + Math.floor(Math.random() * 100000);
+        amount = Math.floor(Math.random() * 100) / 100;
+        //redirect to home page
+        window.location.href = `http://localhost:9597?giv_id=${giv_id}&amount=${amount}`;
+      }
+    </script>
+    <button onclick="givRequest()">Giv</button>
+    <!-- mocking giveRequest ------------end------------->
+
+
+</body>
+</html>    
+    
+    
