@@ -60,26 +60,33 @@ const createOrder = async (givID, amount) => {
   return data;
 };
 
-const send2giv = async (givID, result) => {
-  console.log("givID send2giv: ", givID);
-  console.log("result send2giv: ", result);
+// const send2giv = async (givID, result) => {
+//   console.log("givID send2giv: ", givID);
+//   console.log("result send2giv: ", result);
 
-  // /api/Order/payment/{orderNumber}
-  const url = `https://mvpapi.giv2pay.com/api/Order/payment/${givID}`;
-  // const headers = {
-  //   "Content-Type": "application/json",
-  // };
-  // const response = await fetch(url, {
-  //   headers,
-  //   method: "POST",
-  //   body: JSON.stringify(result),
-  // });
-  // const data = await response.json();
-  // if (data.error) {
-  //   throw new Error(error);
-  // }
-  return;
-};
+//   // /api/Order/payment/{orderNumber}
+//   const url = `https://mvpapi.giv2pay.com/api/Order/payment/${givID}`;
+//   const headers = {
+//     "Content-Type": "application/json",
+//   };
+//   const response = await fetch(url, {
+//     headers,
+//     method: "POST",
+//     body: JSON.stringify(result),
+//   })
+//     .then((response) => {
+//       // Handle the response
+//       if (response.ok) {
+//         console.log("Data sent successfully!");
+//       } else {
+//         console.log("Error:", response.statusText);
+//       }
+//     })
+//     .catch((error) => {
+//       console.log("Error:", error);
+//     });
+//   return;
+// };
 
 const capturePayment = async (orderID) => {
   const url = `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`;
@@ -99,7 +106,7 @@ const capturePayment = async (orderID) => {
   console.log("orderID from capture: ", orderID);
   console.log("givID from capture: ", orderMap.get(orderID));
   console.log("result from capture: ", data);
-  send2giv(orderMap.get(orderID), data);
+  // send2giv(orderMap.get(orderID), data);
   //delete orderID from orderMap
   orderMap.delete(orderID);
   

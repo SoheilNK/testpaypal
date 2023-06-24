@@ -28,6 +28,7 @@
         // Accessing individual query parameters
         var giv_id = queryParams["giv_id"];
         var amount = queryParams["amount"];
+        var userToken = queryParams["userToken"];
 
         // Do something with the query parameters
         console.log("giv_id:", giv_id);
@@ -35,9 +36,9 @@
         //save to local storage
         localStorage.setItem("giv_id", giv_id);
         localStorage.setItem("amount", amount);
+        localStorage.setItem("userToken", userToken);
         //remove from url
         window.history.replaceState({}, document.title, "/");
-
       }
     </script>
   </head>
@@ -52,9 +53,12 @@
             // This function sets up the details of the transaction, including the amount and giv_id.
             const giv_id = localStorage.getItem("giv_id");
             const amount = localStorage.getItem("amount");
-            const response = await fetch(`/orders?giv_id=${giv_id}&amount=${amount}`, {
-              method: "POST",
-            });
+            const response = await fetch(
+              `/orders?giv_id=${giv_id}&amount=${amount}`,
+              {
+                method: "POST",
+              }
+            );
             const details = await response.json();
             return details.id;
           },
@@ -86,14 +90,42 @@
               return alert(msg); // Show a failure message (try to avoid alerts in production environments)
             }
 
-            // Successful capture! For demo purposes:
+            // Successful capture:
             console.log(
               "Capture result",
               details,
               JSON.stringify(details, null, 2)
             );
             const transaction = details.purchase_units[0].payments.captures[0];
-            
+            //send result to giv-----------------------------------------------
+            const userToken = localStorage.getItem("userToken");
+            const giv_id = localStorage.getItem("giv_id");
+            const amount = localStorage.getItem("amount");
+            // /api/Order/payment/{orderNumber}
+            const url = `https://mvpapi.giv2pay.com/api/Order/payment/${giv_id}`;
+            const headers = {
+              "Content-Type": "application/json",
+            };
+            const response2 = await fetch(url, {
+              method: "POST",
+              headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + userToken
+                },
+              body: JSON.stringify(details),
+            })
+              .then((response) => {
+                // Handle the response
+                if (response.ok) {
+                  console.log("Data sent successfully!");
+                } else {
+                  console.log("Error:", response.statusText);
+                }
+              })
+              .catch((error) => {
+                console.log("Error:", error);
+              });
+
             alert(
               "Transaction " +
                 transaction.status +
@@ -102,7 +134,7 @@
                 "\n\nSee console for all available details"
             );
             //close current tab
-            window.close();
+            // window.close();
           },
         })
         .render("#paypal-button-container");
