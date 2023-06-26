@@ -121,7 +121,7 @@ const capturePayment = async (orderID) => {
   return data;
 };
 
-// Define your secret key
+// Define the secret key
 const secretKey = "your-secret-key";
 
 // JWT verification middleware
@@ -146,14 +146,10 @@ function verifyToken(req, res, next) {
   });
 }
 
-app.get("/", verifyToken, (req, res) => {
+app.get("/",  (req, res) => {
   res.sendFile(`${__dirname}/index.html`);
 });
 
-
-// app.get("/", (req, res) => {
-//   res.sendFile(`${__dirname}/index.html`);
-// });
 
 app.post("/orders", async (req, res) => {
   //read givID and amount from query string
@@ -170,8 +166,8 @@ app.post("/orders/:orderID/capture", async (req, res) => {
   const response = await capturePayment(req.params.orderID);
   res.json(response);
 });
-//endpoint for generating a jwt token localy
 
+//endpoint for generating a jwt token localy for mocking request from giv
 app.get("/jwt", async (req, res) => {
   // Generate a JWT
   const secretKey = "your-secret-key";
