@@ -1,13 +1,21 @@
 import express from "express";
 import fetch from "node-fetch";
 import path from "path";
-import send from "send";
+import jwt from "jsonwebtoken";
+import bodyParser from "body-parser";
+import helmet from "helmet";
+import cors from "cors";
+
 const __dirname = path.resolve();
 
 let orderMap = new Map(); // create a new map object to store givID and orderID
-let amountMap = new Map(); // create a new map object to store givID and amount
 
 const app = express();
+// Call midlewares
+// app.use(helmet());
+app.use(cors());
+app.use(bodyParser.json());
+
 const getAccessToken = async () => {
   const clientId =
     "AVkuImsa0vaRKpsqeYRuq7MvW9oaaTM-sZwiZ8dTz4llFyUVEXoLh9mSghcpbDRT8dUSEXAiOEPOyRic";
@@ -109,7 +117,7 @@ const capturePayment = async (orderID) => {
   // send2giv(orderMap.get(orderID), data);
   //delete orderID from orderMap
   orderMap.delete(orderID);
-  
+
   return data;
 };
 
@@ -131,6 +139,15 @@ app.post("/orders", async (req, res) => {
 app.post("/orders/:orderID/capture", async (req, res) => {
   const response = await capturePayment(req.params.orderID);
   res.json(response);
+});
+//endpoint for generating a jwt token localy
+
+app.get("/jwt", async (req, res) => {
+  // Generate a JWT
+  const secretKey = "your-secret-key";
+  const payload = { userId: 123, username: "john.doe" };
+  const token = jwt.sign(payload, secretKey);
+  res.status(200).send(token);
 });
 
 app.listen(9597, () => {

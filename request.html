@@ -9,10 +9,16 @@
     <!-- mocking giveRequest ------------start------------->
     <script>
       async function givRequest() {
+        //get jwt token from /jwt
+        const response = await fetch("http://localhost:9597/jwt", {
+          method: "GET",
+        });
+        const userToken = await response.text();
+
         //from new tab
         giv_id = "giv_id" + Math.floor(Math.random() * 100000);
-        userToken = "userToken" + Math.floor(Math.random() * 100000);
         amount = Math.floor(Math.random() * 100) / 100;
+
         //redirect to home page in a new tab
         window.open(
           `http://localhost:9597?giv_id=${giv_id}&amount=${amount}&userToken=${userToken}`,
