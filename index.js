@@ -121,9 +121,39 @@ const capturePayment = async (orderID) => {
   return data;
 };
 
-app.get("/", (req, res) => {
+// Define your secret key
+const secretKey = "your-secret-key";
+
+// JWT verification middleware
+function verifyToken(req, res, next) {
+  // Get token from query string
+  const token = req.query.userToken;
+
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: "Failed to authenticate token" });
+    }
+
+    // Attach the decoded payload to the request object
+    req.user = decoded;
+
+    // Proceed to the next middleware or route
+    next();
+  });
+}
+
+app.get("/", verifyToken, (req, res) => {
   res.sendFile(`${__dirname}/index.html`);
 });
+
+
+// app.get("/", (req, res) => {
+//   res.sendFile(`${__dirname}/index.html`);
+// });
 
 app.post("/orders", async (req, res) => {
   //read givID and amount from query string
