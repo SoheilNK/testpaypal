@@ -27,40 +27,26 @@
 
         // Accessing individual query parameters
         var giv_id = queryParams["giv_id"];
-        var amount = queryParams["amount"];
-        var tokenString = queryParams["userToken"];
-        if (!tokenString) {
+        // var amount = queryParams["amount"];
+        var token = queryParams["userToken"];
+        console.log("tokenString", token);
+        if (!token) {
           return res.status(401).json({ message: "No token provided" });
         }
-        let token = null;
-        try {
-          // Parse the token string back to an object
-          token = JSON.parse(tokenString);
-
-          // Verify the token
-          // jwt.verify(token, secretKey, (err, decoded) => {
-          //   if (err) {
-          //     return res
-          //       .status(403)
-          //       .json({ message: "Failed to authenticate token" });
-          //   }
-
-          //   // Token is valid, you can access the decoded payload here
-          //   console.log(decoded);
-
-          //   // Respond with protected content
-          //   res.send("Protected content");
-          // });
-        } catch (err) {
-          res.status(400).json({ message: "Invalid token" });
-        }
+        // let token = null;
+        // try {
+        //   // Parse the token string back to an object
+        //   token = JSON.parse(tokenString);
+        // } catch (err) {
+        //   res.status(400).json({ message: "Invalid token" });
+        // }
 
         // Do something with the query parameters
         console.log("giv_id:", giv_id);
-        console.log("amount:", amount);
+        // console.log("amount:", amount);
         //save to local storage
         localStorage.setItem("giv_id", giv_id);
-        localStorage.setItem("amount", amount);
+        // localStorage.setItem("amount", amount);
         // localStorage.setItem("userToken", userToken);
         //use stringify to save object to local storage
         localStorage.setItem("token", JSON.stringify(token));
@@ -87,7 +73,11 @@
           createOrder: async (data, actions) => {
             // This function sets up the details of the transaction, including the amount and giv_id.
             const giv_id = localStorage.getItem("giv_id");
-            const amount = localStorage.getItem("amount");
+
+            // const amount = 0.65; //
+            const amount = await getAmount(giv_id); // save to local storage
+            console.log("amount", amount);
+            localStorage.setItem("amount", amount);
             const response = await fetch(
               `/orders?giv_id=${giv_id}&amount=${amount}`,
               {
@@ -132,17 +122,19 @@
             //   // JSON.stringify(details, null, 2)
             // );
             const transaction = details.purchase_units[0].payments.captures[0];
+
             //send result to giv-----------------------------------------------
+
             const userToken = await getAccessToken();
             console.log("userToken from send to giv", userToken);
 
             const giv_id = localStorage.getItem("giv_id");
             const amount = localStorage.getItem("amount");
-            const output2 = {
-              Result: details,
-              ExceptionCode: details.debug_id,
-              ExceptionMessage: errorDetail.description,
-            };
+            // const output2 = {
+            //   Result: details,
+            //   ExceptionCode: details.debug_id,
+            //   ExceptionMessage: errorDetail.description,
+            // };
             const output = {
               OrderNumber: giv_id,
               PaymentCode: transaction.id,
@@ -152,37 +144,42 @@
             //   "output",
             //   output,
             //   "\n\n"
-            //   // JSON.stringify(output, null, 2)
+            //  // JSON.stringify(output, null, 2)
             // );
-            // /api/Order/payment/{orderNumber}
-            const url = `https://mvpapi.giv2pay.com/api/Order/payment/${giv_id}`;
-            const headers = {
-              "Content-Type": "application/json",
-            };
-            const response2 = await fetch(url, {
+
+            const fetchOptions = {
               method: "POST",
               headers: {
-                "Content-Type": "application/json",
+                accept: "text/plain",
                 Authorization: "Bearer " + userToken,
+                "Content-Type": "application/json",
               },
               body: JSON.stringify(output),
-            })
-              .then((response) => {
-                // Handle the response
-                if (response.ok) {
-                  console.log("Data sent successfully!");
+            };
+            console.log("fetchOptions", fetchOptions);
+            const sendUrl = `https://mvpapi.giv2pay.com/api/Order/payment/${giv_id}`;
+            console.log("sendUrl", sendUrl);
+            const resSend2giv = await fetch(sendUrl, fetchOptions)
+              .then((response) => response.text())
+              .then((data) => {
+                console.log(data);
+                if (data === "true") {
+                  alert("Data sent successfully!");
                 } else {
-                  console.log("Error:", response.statusText);
+                  alert("Data sent failed!");
                 }
+                // Process the response data here
               })
               .catch((error) => {
-                console.log("Error:", error);
+                console.error("error sending to giv " + error);
+                // Handle any errors here
               });
+            console.log("resSend2giv", resSend2giv);
 
             //remove from local storage
-            localStorage.removeItem("giv_id");
-            localStorage.removeItem("amount");
-            localStorage.removeItem("token");
+            // localStorage.removeItem("giv_id");
+            // localStorage.removeItem("amount");
+            // localStorage.removeItem("token");
             //end send result to giv-------------------------------------------
 
             alert(
@@ -199,9 +196,14 @@
         .render("#paypal-button-container");
 
       //get the access token from the local storage
-      function getAccessToken() {
-        const token = localStorage.getItem("token");
-        const userToken = token ? JSON.parse(token).Token : null;
+      async function getAccessToken() {
+        //pars token from local storage
+        const tokenString = await localStorage.getItem("token");
+        const userToken = await JSON.parse(tokenString);
+
+        //const userToken = localStorage.getItem("token");
+        console.log("userToken from getAccessToken", userToken);
+        // const userToken = token ? JSON.parse(tokenString).Token : null;
 
         if (!userToken) {
           return null;
@@ -212,6 +214,42 @@
           return null;
         }
         return userToken;
+      }
+
+
+      //get the amount from giv server
+      async function getAmount(giv_id) {
+        const userToken = await getAccessToken();
+        const fetchOptions = {
+          method: "GET",
+          headers: {
+            accept: "text/plain",
+            Authorization: "Bearer " + userToken,
+          },
+        };
+
+        // console.log("fetchOptions", fetchOptions);
+
+        const resAmount = await fetch(
+          `https://mvpapi.giv2pay.com/api/Order/${giv_id}`,
+          fetchOptions
+        )
+          .then((response) => response.text())
+          .then((data) => {
+            const Result = JSON.parse(data);
+            const paid = Result.Result.Paid ;
+            console.log("Paid = " + paid); // Output: 104.65
+            console.log("Amount fetched successfully!");
+            
+            return paid ;
+            // Process the response data here
+          })
+          .catch((error) => {
+            console.error(error);
+            // Handle any errors here
+          });
+        console.log("resAmount", resAmount);
+        return resAmount;
       }
     </script>
   </body>

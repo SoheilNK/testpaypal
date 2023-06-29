@@ -9,64 +9,77 @@
     <!-- mocking giveRequest ------------start------------->
     <script>
       async function givRequest() {
+        // get userToken from https://mvpapi.giv2pay.com/api
+        const resLogin = await fetch(
+          "https://mvpapi.giv2pay.com/api/Authentication/login",
+          {
+            method: "POST",
+            headers: {
+              Accept: "*/*",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              Username: "jpoor3@gmail.com",
+              Password: "aBc@123",
+            }),
+          }
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            return data;
+          })
+          .catch((error) => console.error(error));
+
+        const userToken = await resLogin.Result.Token;
+
+        console.log("userToken = ", userToken);
+
+        //get giv_id from /api/Order
+        const resOrder = await fetch("https://mvpapi.giv2pay.com/api/Order", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + userToken,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            return data;
+          })
+          .catch((error) => console.error(error));
+
+        const giv_ids = await resOrder.Result.Items.map(
+          (item) => item.OrderNumber
+        );
+        console.log(giv_ids);
+
+        const iframe = document.getElementById("paypalIframe");
+        const screenHeight =
+          window.innerHeight || document.documentElement.clientHeight;
+
+        // Set the height of the iframe
+        iframe.style.height = `${screenHeight}px`;
+        iframe.src = `http://localhost:9597?giv_id=${giv_ids[0]}&userToken=${userToken}`;
+
         //get jwt token from /jwt
         // const response = await fetch("http://localhost:9597/jwt", {
         //   method: "GET",
         // });
         // const userToken = await response.text();
 
-        //get userToken from https://mvpapi.giv2pay.com/api
-        // const resLogin = await fetch(
-        //   "https://mvp-adminapi.giv2pay.com/api/Authentication/login",
-        //   {
-        //     method: "POST",
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //       Username: "jpoor3@gmail.com",
-        //       Password: "aBc@123",
-        //     }),
-        //   }
-        // );
-        const resLogin = {
-          Result: {
-            Token:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoianBvb3IzQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcHJpbWFyeXNpZCI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImU2OGI3NDc1LWMyMTMtNGRkMi05MDU5LWEwNDRiYzFjYWRkOSIsImp0aSI6Ijk1ODY2YTYzLTE3YzUtNGNhNi1iMzU4LWNlZDYwNjgzM2MzZiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwiZXhwIjoxNzQ3ODEzNDcyLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjYxOTU1IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo0MjAwIn0.KiVRp3gUxmZ9ddRaKjY0wbqw98XmXxL6vNazHtx9KrY",
-            ExpireDate: "2025-05-21T07:44:32Z",
-            Conversation_ValidFrom: null,
-            Conversation_ValidTo: null,
-          },
-          ExceptionCode: 0,
-          ExceptionMessage: null,
-        };
-
-
-        //isolate token from response body and result parameter
-        // const res = await resLogin.json();
-        // const userToken = await res.Result;
-        const userToken = await resLogin.Result;
-        // Convert the token object to a string representation
-        const tokenString = JSON.stringify(userToken);
-        // console.log("token = ", Result);
-        // console.log("result = ", result);
-        // const userToken = result.token;
-        console.log("userToken = ", userToken);
-
-        //from new tab
-        // giv_id = "giv_id" + Math.floor(Math.random() * 100000);
-        giv_id = "NQIuAJpDUawYmTNyyQ"
-        amount = Math.floor(Math.random() * 100) / 100;
-
         //redirect to home page in a new tab
-        window.open(
-          `http://localhost:9597?giv_id=${giv_id}&amount=${amount}&userToken=${tokenString}`,
-          "_blank"
-        );
+        // window.open(
+        //   `http://localhost:9597?giv_id=${giv_ids[0]}&userToken=${userToken}`
+        // );
         // window.location.href = `http://localhost:9597?giv_id=${giv_id}&amount=${amount}`;
       }
     </script>
-    <button onclick="givRequest()">Giv</button>
-    <!-- mocking giveRequest ------------end------------->
+    <div style="display: flex; flex-direction: column">
+      <button onclick="givRequest()">Giv</button>
+      <!-- mocking giveRequest ------------end------------->
+      <iframe id="paypalIframe" frameborder="3px"></iframe>
+    </div>
   </body>
 </html>
