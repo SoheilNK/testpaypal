@@ -130,16 +130,17 @@
 
             const giv_id = localStorage.getItem("giv_id");
             const amount = localStorage.getItem("amount");
-            // const output2 = {
-            //   Result: details,
-            //   ExceptionCode: details.debug_id,
-            //   ExceptionMessage: errorDetail.description,
-            // };
-            const output = {
+            const output = JSON.stringify({
               OrderNumber: giv_id,
               PaymentCode: transaction.id,
               Paid: amount,
-            };
+            });
+            // const output2 = {
+            //   Result: output,
+            //   ExceptionCode: details.debug_id,
+            //   ExceptionMessage: errorDetail.description,
+            // };
+
             // console.log(
             //   "output",
             //   output,
@@ -154,7 +155,7 @@
                 Authorization: "Bearer " + userToken,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify(output),
+              body: output
             };
             console.log("fetchOptions", fetchOptions);
             const sendUrl = `https://mvpapi.giv2pay.com/api/Order/payment/${giv_id}`;
@@ -177,9 +178,9 @@
             console.log("resSend2giv", resSend2giv);
 
             //remove from local storage
-            // localStorage.removeItem("giv_id");
-            // localStorage.removeItem("amount");
-            // localStorage.removeItem("token");
+            localStorage.removeItem("giv_id");
+            localStorage.removeItem("amount");
+            localStorage.removeItem("token");
             //end send result to giv-------------------------------------------
 
             alert(
@@ -216,7 +217,6 @@
         return userToken;
       }
 
-
       //get the amount from giv server
       async function getAmount(giv_id) {
         const userToken = await getAccessToken();
@@ -237,11 +237,11 @@
           .then((response) => response.text())
           .then((data) => {
             const Result = JSON.parse(data);
-            const paid = Result.Result.Paid ;
+            const paid = Result.Result.Paid;
             console.log("Paid = " + paid); // Output: 104.65
             console.log("Amount fetched successfully!");
-            
-            return paid ;
+
+            return paid;
             // Process the response data here
           })
           .catch((error) => {
