@@ -61,7 +61,10 @@
 
         // Set the height of the iframe
         iframe.style.height = `${screenHeight}px`;
-        iframe.src = `http://localhost:9597?giv_id=${giv_ids[0]}&userToken=${userToken}`;
+        // iframe.src = `http://localhost:9597?giv_id=${giv_ids[0]}&userToken=${userToken}`; 
+        iframe.src = `https://mvppay.giv2pay.com/?giv_id=${giv_ids[0]}&userToken=${userToken}`;
+        
+        console.log("iframe.src", iframe.src);
 
         //get jwt token from /jwt
         // const response = await fetch("http://localhost:9597/jwt", {

@@ -164,7 +164,7 @@
               .then((response) => response.text())
               .then((data) => {
                 console.log(data);
-                if (data === "true") {
+                if (data.Result) {
                   alert("Data sent successfully!");
                 } else {
                   alert("Data sent failed!");
